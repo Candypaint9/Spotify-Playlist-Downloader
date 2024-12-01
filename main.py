@@ -30,4 +30,4 @@ for song in songs:
 
     print(str(count) + ' / ' + str(total))
     
-print("Failed: " + failed)
+print("Failed: ", failed)

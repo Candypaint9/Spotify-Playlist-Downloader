@@ -68,7 +68,3 @@ def makeSong(song, path):
     img.close()
 
     shutil.rmtree('./Temp')
-
-#makeSong({"artists":'Meduza', "track_name":'Bad Memories (feat Elley Duh FAST BOY)', "album_name":'ez', "img_url":"https://i.pinimg.com/736x/63/a0/08/63a008f631ae7492a75a001bd0791e8f.jpg", "track_length":149}, 'Test')
-#getmp3()
-#mp4_to_mp3('./Temp\Miki Matsubara- Mayonaka No Door (Stay With Me) Lyrics.mp4', './Liked/Miki Matsubara- Mayonaka No Door (Stay With Me).mp3')
