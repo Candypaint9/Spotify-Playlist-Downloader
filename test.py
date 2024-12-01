@@ -1,38 +1,78 @@
-from pytube import YouTube
-from pytube import Search
+from pytubefix import YouTube
+from pytubefix import Search
 import os
-from dotenv import load_dotenv
-import spotipy
-import spotipy.oauth2 as oauth2
+import eyed3
+from moviepy.editor import *
+import urllib.request 
+import shutil
 
 def getmp4(track_name, artist_name):
-    result = Search(track_name + " " + artist_name + " lyrics").results[0]
+    s = Search(track_name + " " + artist_name + " audio only lyrics")
 
     destination = "./Temp"
 
-    for stream in result.streams.filter(only_audio=True):
-        try:
-            video = stream
-            file = video.download(output_path=destination)
-            return file
-        
-        except Exception as e:
-            continue
+    for result in s.results:
+        streams = result.streams
+        for stream in streams.all():
+            if stream != None:
+                file = stream.download(output_path=destination)
+
+                return file
+
+
+def getArtwork(link):
+    
+    urllib.request.urlretrieve(link, "./Temp/img.jpg")
+
+def mp4_to_mp3(mp4, mp3):
+    video = VideoFileClip(mp4)
+    audio = video.audio
+    audio.write_audiofile(mp3, logger = None)
+    video.close()
+    audio.close()
+
+
+def makeSong(song, playlist_name):
+    
+    artist_name = song["artist_name"]
+    track_name = song["track_name"]
+    album_name = song["album_name"]
+    file = getmp4(track_name, artist_name)
+
+    #print(file)
+
+    if file == None:
+        return
+
+    #convert to mp3
+    name = artist_name + ' - ' + track_name
+    bad_chars = [':', '!', "*", "/", "\\", "?", "|", "<", ">", '"']
+
+    for i in bad_chars:
+        name = name.replace(i, '')
+    
+    new_file = './' + playlist_name + '/' + name +'.mp3'
+    mp4_to_mp3(file, new_file)
 
 
 
+    getArtwork(song["img_url"])
+    img = open('./Temp/img.jpg', 'rb')
 
-load_dotenv()
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+    f = eyed3.load(new_file)
+    f.tag.artist = artist_name
+    f.tag.title = track_name
+    f.tag.album = album_name
+    f.tag.images.set(3, img.read(), 'image/jpeg')
+    f.tag.save(version=eyed3.id3.ID3_V2_3)
 
-credentials = oauth2.SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
-token = credentials.get_access_token()
-spotify = spotipy.Spotify(auth=token)
+    f.tag.save()
+
+    img.close()
 
 
-results = spotify.user_playlist(user="8qaf6rikv94dw8h5adx33eg2y", fields='name', playlist_id="https://open.spotify.com/playlist/7aM38uIRZcGlKHWx6x2y9v?si=yoC6FnIrRd22X4fXLV9kwA&pt=72e55f8c9c9589209b7c792baf953504&pi=ZUn_T-HcQtWGu".split("/")[-1].split("?")[0])
+    shutil.rmtree('./Temp')
 
-
-
-#getmp4('Mayonaka no Door / Stay With Me',  'Miki Matsubara')
+#makeSong({"artist_name":'Meduza', "track_name":'Bad Memories (feat Elley Duh FAST BOY)', "album_name":'ez', "img_url":"https://i.pinimg.com/736x/63/a0/08/63a008f631ae7492a75a001bd0791e8f.jpg"}, 'Test')
+#getmp3()
+#mp4_to_mp3('./Temp\Miki Matsubara- Mayonaka No Door (Stay With Me) Lyrics.mp4', './Liked/Miki Matsubara- Mayonaka No Door (Stay With Me).mp3')
