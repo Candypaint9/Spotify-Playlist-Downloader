@@ -6,26 +6,35 @@ import urllib.request
 import shutil
 
 def getAudio(song):
-    s = Search(song["track_name"] + " " + song["artists"] + " audio only lyrics")
+    s = Search(song["track_name"] + " " + song["artists"] + " audio")
 
     streams = []
-
+    worst_quality = 0
     for result in s.results:
         if song["track_length"] - 3 <= result.length <= song["track_length"] + 3:
             curr = result.streams.filter(only_audio=True).order_by('abr')
-            streams.extend(curr[:min(3, len(curr))])
+            curr.reverse()
+            streams += [curr]
+            worst_quality = max(worst_quality, len(curr))
 
-    for stream in streams:
-        if stream != None:
-            try:
-                file = stream.download(output_path="./Temp")
-                if(file == None):
-                    continue
-                else:
-                    return file
-            except Exception as e:
-                print(e)
+    quality_index = 0
+
+    while quality_index < worst_quality:
+        for i in range(len(streams)):
+            if quality_index >= len(streams[i]):
                 continue
+
+            stream = streams[i][quality_index]
+            if stream != None:
+                try:
+                    file = stream.download(output_path="./Temp")
+                    if(file == None):
+                        continue
+                    else:
+                        return file
+                except Exception as e:
+                    #print(e)
+                    continue
 
 
 def getArtwork(link):
@@ -45,6 +54,7 @@ def makeSong(song, path):
     
     new_file = path + '/' + file_name +'.mp3'
     if os.path.exists(new_file): 
+        print("already exists")
         return
     
     file = getAudio(song)
