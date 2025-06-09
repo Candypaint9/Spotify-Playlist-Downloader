@@ -6,35 +6,24 @@ import urllib.request
 import shutil
 
 def getAudio(song):
-    s = Search(song["track_name"] + " " + song["artists"] + " audio")
-
-    streams = []
-    worst_quality = 0
+    s = Search(f"{song['track_name']} {song['artists']} audio")
     for result in s.results:
-        if song["track_length"] - 3 <= result.length <= song["track_length"] + 3:
-            curr = result.streams.filter(only_audio=True).order_by('abr')
-            curr = list(curr)[::-1]
-            streams += [curr]
-            worst_quality = max(worst_quality, len(curr))
-
-    quality_index = 0
-
-    while quality_index < worst_quality:
-        for i in range(len(streams)):
-            if quality_index >= len(streams[i]):
+        if abs(result.length - song["track_length"]) <= 3:
+            best = (result.streams
+                          .filter(only_audio=True)
+                          .order_by('abr')
+                          .desc()
+                          .first())
+            if not best:
                 continue
+            try:
+                file = best.download(output_path="./Temp")
+                if file:
+                    return file
+            except Exception:
+                continue
+    return None
 
-            stream = streams[i][quality_index]
-            if stream != None:
-                try:
-                    file = stream.download(output_path="./Temp")
-                    if(file == None):
-                        continue
-                    else:
-                        return file
-                except Exception as e:
-                    #print(e)
-                    continue
 
 
 def getArtwork(link):
