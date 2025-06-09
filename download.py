@@ -13,7 +13,7 @@ def getAudio(song):
     for result in s.results:
         if song["track_length"] - 3 <= result.length <= song["track_length"] + 3:
             curr = result.streams.filter(only_audio=True).order_by('abr')
-            curr.reverse()
+            curr = list(curr)[::-1]
             streams += [curr]
             worst_quality = max(worst_quality, len(curr))
 
